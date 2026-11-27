@@ -1,0 +1,30 @@
+name: Sincronizar backlog do BuddyUp
+on:
+  issues:
+    types: [closed, reopened, labeled, unlabeled]
+  schedule:
+    - cron: '17 * * * *'
+  workflow_dispatch:
+    inputs:
+      previa:
+        description: Mostrar mudanças sem alterar o quadro
+        type: boolean
+        default: true
+permissions:
+  contents: read
+concurrency:
+  group: buddyup-backlog
+  cancel-in-progress: false
+jobs:
+  sincronizar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - name: Conferir dependências
+        env:
+          GH_TOKEN: ${{ secrets.BUDDYUP_PROJECT_TOKEN }}
+          APPLY_CHANGES: ${{ github.event_name != 'workflow_dispatch' || !inputs.previa }}
+        run: python3 .github/scripts/sincronizar_backlog.py
