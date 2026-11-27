@@ -63,8 +63,10 @@ Execute os comandos no diretório indicado:
 
 | Diretório | Comandos | Resultado esperado |
 | --- | --- | --- |
-| `backend/` | `.\mvnw.cmd verify` | Teste de integração e empacotamento passam. O PostgreSQL do Compose precisa estar saudável. |
+| `backend/` | `.\mvnw.cmd verify` | Fronteiras dos módulos, migração inicial em PostgreSQL e empacotamento são verificados. O Testcontainers sobe um banco temporário com o Docker. |
 | `web/` | `npm run lint`, `npm run typecheck`, `npm run build` | Lint, tipos e build de produção passam. |
 | `mobile/` | `npm run lint`, `npm run typecheck`, `npx expo export --platform all` | Lint, tipos e geração dos bundles Android e iOS passam. Confira a tela em aparelho ou simulador para validar a execução nativa. |
 
 O workflow **Verificar monorepo** executa as checagens por área nos PRs para a `main`. Para validar o onboarding, em um clone limpo, inicie as três partes seguindo este README e registre os comandos, as plataformas testadas e os resultados no PR.
+
+Para adicionar módulos, APIs internas ou migrações, consulte a [arquitetura do backend](docs/arquitetura-backend.md).
