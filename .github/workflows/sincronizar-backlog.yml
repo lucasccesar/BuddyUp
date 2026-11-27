@@ -1,7 +1,10 @@
 name: Sincronizar backlog do BuddyUp
 on:
   issues:
-    types: [closed, reopened, labeled, unlabeled]
+    types: [opened, closed, reopened, assigned, labeled, unlabeled]
+  pull_request:
+    branches: [main]
+    types: [opened, reopened, edited, ready_for_review, converted_to_draft, closed]
   schedule:
     - cron: '17 * * * *'
   workflow_dispatch:
@@ -17,11 +20,13 @@ concurrency:
   cancel-in-progress: false
 jobs:
   sincronizar:
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v5
         with:
+          ref: refs/heads/main
           persist-credentials: false
       - name: Conferir dependências
         env:
