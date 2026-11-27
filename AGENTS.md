@@ -99,7 +99,7 @@ Escolha os cenários pelo risco e pelos critérios da issue. Use um teste de int
 
 1. Quando a branch estiver pronta para revisão, confira o diff, os critérios de aceitação e as verificações locais pertinentes. Prepare o título e o corpo. Pergunte: “A issue #42 está pronta para revisão. Quer que eu abra o PR desta branch para `main`?”
 2. Após a confirmação, publique a branch se necessário e abra o PR para `main` com o título e o corpo padronizados. Se já existir PR para a branch, use o existente e informe o link. Limite os commits ao trabalho da issue.
-3. Informe o link do PR e confirme se a automação moveu a issue para **Em revisão** quando a entrega for completa. Se faltar acesso ao quadro, indique essa conferência como próxima ação. Para um PR parcial, indique o que ainda falta na issue. O merge segue após as verificações exigidas e a aprovação de outro integrante. A publicação ocorre depois da homologação, conforme o fluxo do projeto.
+3. Informe o link do PR e confirme se a automação moveu a issue para **Em revisão** quando a entrega for completa. Se faltar acesso ao quadro, indique essa conferência como próxima ação. Para um PR parcial, indique o que ainda falta na issue. O merge segue após as verificações exigidas passarem. A revisão por outro integrante é opcional. A publicação ocorre depois da homologação, conforme o fluxo do projeto.
 
 ## Modelo de descrição do PR
 
