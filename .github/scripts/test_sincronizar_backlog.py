@@ -5,7 +5,7 @@ import sincronizar_backlog
 from sincronizar_backlog import next_status
 
 
-def card(status, *, assigned=False, labels=("triada",), dependencies=(), closed=False):
+def card(status, *, assigned=False, labels=(), dependencies=(), closed=False):
     def connection(nodes):
         return {"pageInfo": {"hasNextPage": False}, "nodes": list(nodes)}
     return {
@@ -23,6 +23,22 @@ def card(status, *, assigned=False, labels=("triada",), dependencies=(), closed=
 
 
 class StatusTests(unittest.TestCase):
+    def test_issue_sem_dependencias_fica_pronta(self):
+        self.assertEqual(next_status(card("Backlog")), "Pronta")
+
+    def test_issue_fica_pronta_quando_a_dependencia_e_concluida(self):
+        item = card("Backlog", dependencies=[{"state": "CLOSED", "stateReason": "COMPLETED"}])
+        self.assertEqual(next_status(item), "Pronta")
+
+    def test_dependencia_fechada_sem_conclusao_mantem_backlog(self):
+        item = card("Backlog", dependencies=[{"state": "CLOSED", "stateReason": "NOT_PLANNED"}])
+        self.assertIsNone(next_status(item))
+
+    def test_pendencias_e_epicos_mantem_backlog(self):
+        for label in ("aguarda-decisão", "aguarda-marco", "épico"):
+            with self.subTest(label=label):
+                self.assertIsNone(next_status(card("Backlog", labels=[label])))
+
     def test_atribuicao_inicia_issue_pronta(self):
         self.assertEqual(next_status(card("Pronta", assigned=True)), "Em andamento")
 
@@ -40,7 +56,7 @@ class StatusTests(unittest.TestCase):
         self.assertEqual(next_status(card("Em revisão"), {42: "draft"}), "Em andamento")
 
     def test_etiqueta_permite_revisao_sem_pr(self):
-        self.assertEqual(next_status(card("Em andamento", labels=["triada", "revisar"])), "Em revisão")
+        self.assertEqual(next_status(card("Em andamento", labels=["revisar"])), "Em revisão")
 
     def test_pr_pronto_nao_move_issue_bloqueada(self):
         item = card("Em andamento", dependencies=[{"state": "OPEN", "stateReason": None}])

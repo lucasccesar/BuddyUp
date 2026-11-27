@@ -122,7 +122,7 @@ def next_status(item, reviews=None):
     if status == "Pronta" and blocked:
         return "Backlog"
     if status in {None, "Backlog", "Concluída"}:
-        target = "Pronta" if "triada" in labels and not blocked else "Backlog"
+        target = "Backlog" if blocked else "Pronta"
         return target if status != target else None
     if blocked:
         return None
