@@ -1,0 +1,13 @@
+:root {
+  font-family: system-ui, sans-serif;
+}
+
+main {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+}
+
+body {
+  margin: 0;
+}
