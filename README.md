@@ -28,6 +28,8 @@ cd backend
 
 Abra [a verificação do banco](http://127.0.0.1:8080/actuator/health/db). A resposta esperada é HTTP 200 com `{"status":"UP"}`.
 
+Na primeira execução com um volume vazio, o PostgreSQL pode levar mais tempo que a janela do healthcheck do Compose. Se aparecer `container buddyup-postgres-1 is unhealthy`, acompanhe a inicialização com `docker compose logs -f postgres` até o servidor definitivo informar que está aceitando conexões. Pressione Ctrl+C para sair dos logs, repita `docker compose up -d --wait postgres` e inicie o backend após o comando confirmar que o banco está saudável.
+
 O perfil `local` usa o banco `buddyup` em `127.0.0.1:15432`, com as credenciais de desenvolvimento do Compose. Se a porta estiver ocupada, configure `BUDDYUP_POSTGRES_PORT` com a mesma porta livre nos terminais do Compose, do backend e dos testes. Em PowerShell, use `$env:BUDDYUP_POSTGRES_PORT = '15434'`. Em bash, use `export BUDDYUP_POSTGRES_PORT=15434`.
 
 Para parar o backend, pressione Ctrl+C. Para parar o PostgreSQL, execute `docker compose stop postgres` na raiz. Os dados locais ficam no volume do Compose.
