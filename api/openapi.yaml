@@ -188,36 +188,41 @@ paths:
       tags: [Accounts]
       operationId: startEmailRegistration
       summary: Solicitar o código para confirmar o e-mail de cadastro
-      x-buddyup-implementation: planned
       security: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/EmailRequest'
+              $ref: '#/components/schemas/RegistrationEmailRequest'
       responses:
         '202':
           description: Solicitação recebida. A resposta tem o mesmo formato se o endereço já estiver cadastrado.
+          headers:
+            Cache-Control:
+              $ref: '#/components/headers/NoStore'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/EmailChallenge'
+        '400':
+          $ref: '#/components/responses/RegistrationValidationFailed'
         '429':
           $ref: '#/components/responses/AttemptsLimited'
+        '503':
+          $ref: '#/components/responses/RegistrationUnavailable'
   /v1/auth/registration/email-confirmations:
     post:
       tags: [Accounts]
       operationId: confirmRegistrationEmail
       summary: Confirmar e-mail com código de uso único
-      x-buddyup-implementation: planned
       security: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/EmailConfirmation'
+              $ref: '#/components/schemas/RegistrationEmailConfirmation'
       responses:
         '200':
           description: Prova de confirmação para retomar o cadastro.
@@ -228,6 +233,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RegistrationProof'
+        '400':
+          $ref: '#/components/responses/RegistrationValidationFailed'
         '401':
           $ref: '#/components/responses/InvalidCredentials'
         '429':
@@ -237,7 +244,6 @@ paths:
       tags: [Accounts]
       operationId: completeEmailRegistration
       summary: Concluir cadastro por e-mail após confirmação válida
-      x-buddyup-implementation: planned
       security: []
       requestBody:
         required: true
@@ -247,11 +253,22 @@ paths:
               $ref: '#/components/schemas/EmailRegistration'
       responses:
         '201':
-          description: Conta criada, com acesso pelos métodos de login configurados.
+          description: Conta por e-mail criada. A prova de cadastro é consumida.
+        '400':
+          $ref: '#/components/responses/RegistrationValidationFailed'
         '401':
           $ref: '#/components/responses/InvalidCredentials'
         '409':
-          $ref: '#/components/responses/AccountDataConflict'
+          description: E-mail já cadastrado ou nickname ocupado. A prova não é consumida.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiProblem'
+              examples:
+                ACCOUNT_DATA_CONFLICT:
+                  value: { type: 'about:blank', title: Conflict, status: 409, code: ACCOUNT_DATA_CONFLICT }
+                NICKNAME_UNAVAILABLE:
+                  value: { type: 'about:blank', title: Conflict, status: 409, code: NICKNAME_UNAVAILABLE }
   /v1/accounts/me/profile-completion:
     post:
       tags: [Accounts]
@@ -651,6 +668,20 @@ components:
       description: 'Cookie de navegador __Host-buddyup_session com Secure, HttpOnly, Path=/ e SameSite=Lax.'
       schema: { type: string }
   responses:
+    RegistrationValidationFailed:
+      description: Corpo ou campos inválidos, incluindo ausência da declaração de 18 anos ou mais.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ApiProblem'
+          example: { type: 'about:blank', title: Bad Request, status: 400, code: VALIDATION_FAILED }
+    RegistrationUnavailable:
+      description: O envio do código está temporariamente indisponível.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ApiProblem'
+          example: { type: 'about:blank', title: Service Unavailable, status: 503, code: REGISTRATION_UNAVAILABLE }
     SessionCreated:
       description: Sessão iniciada. O navegador recebe a credencial em cookie; o aplicativo recebe o token no corpo.
       headers:
@@ -893,6 +924,11 @@ components:
       required: [email]
       properties:
         email: { type: string, format: email }
+    RegistrationEmailRequest:
+      type: object
+      required: [email]
+      properties:
+        email: { type: string, format: email, maxLength: 254 }
     EmailChallenge:
       type: object
       required: [challengeId]
@@ -904,6 +940,12 @@ components:
       properties:
         challengeId: { type: string, minLength: 1 }
         code: { type: string, minLength: 1, writeOnly: true }
+    RegistrationEmailConfirmation:
+      type: object
+      required: [challengeId, code]
+      properties:
+        challengeId: { type: string, format: uuid }
+        code: { type: string, pattern: '^[0-9]{6}$', writeOnly: true }
     RegistrationProof:
       type: object
       required: [registrationToken]
@@ -926,10 +968,28 @@ components:
       type: object
       required: [registrationToken, password, profile]
       properties:
-        registrationToken: { type: string, minLength: 1, writeOnly: true }
-        password: { type: string, minLength: 1, writeOnly: true }
+        registrationToken: { type: string, pattern: '^[A-Za-z0-9_-]{43}$', writeOnly: true }
+        password: { type: string, minLength: 12, maxLength: 128, writeOnly: true }
         profile:
-          $ref: '#/components/schemas/RequiredProfile'
+          $ref: '#/components/schemas/EmailRegistrationProfile'
+    EmailRegistrationProfile:
+      type: object
+      required: [name, nickname, region, languages, confirmsAdultAge]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 100 }
+        nickname: { type: string, minLength: 1, maxLength: 40 }
+        region: { type: string, minLength: 1, maxLength: 64 }
+        languages:
+          type: array
+          minItems: 1
+          maxItems: 20
+          uniqueItems: true
+          items:
+            type: string
+            minLength: 1
+            maxLength: 35
+            pattern: '^[A-Za-z]{2,3}(-[A-Za-z0-9]{2,8})*$'
+        confirmsAdultAge: { type: boolean, const: true }
     PasswordReset:
       type: object
       required: [resetToken, password]

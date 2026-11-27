@@ -72,3 +72,5 @@ O workflow **Verificar monorepo** executa as checagens por área nos PRs para a 
 Para adicionar módulos, APIs internas ou migrações, consulte a [arquitetura do backend](docs/arquitetura-backend.md).
 
 Para integrar o site ou o app com respostas simuladas, consulte o [contrato OpenAPI e o mock](docs/contrato-api.md).
+
+Para validar o cadastro com uma caixa de e-mail local, consulte [cadastro por e-mail](docs/cadastro-por-email.md).

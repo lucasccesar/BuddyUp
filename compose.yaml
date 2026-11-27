@@ -17,5 +17,11 @@ services:
       timeout: 3s
       retries: 10
 
+  mailpit:
+    image: axllent/mailpit:v1.34.0
+    ports:
+      - '127.0.0.1:${BUDDYUP_MAIL_PORT:-11025}:1025'
+      - '127.0.0.1:${BUDDYUP_MAIL_UI_PORT:-18025}:8025'
+
 volumes:
   postgres-data:
