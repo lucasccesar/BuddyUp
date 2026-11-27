@@ -70,3 +70,5 @@ Execute os comandos no diretório indicado:
 O workflow **Verificar monorepo** executa as checagens por área nos PRs para a `main`. Para validar o onboarding, em um clone limpo, inicie as três partes seguindo este README e registre os comandos, as plataformas testadas e os resultados no PR.
 
 Para adicionar módulos, APIs internas ou migrações, consulte a [arquitetura do backend](docs/arquitetura-backend.md).
+
+Para integrar o site ou o app com respostas simuladas, consulte o [contrato OpenAPI e o mock](docs/contrato-api.md).

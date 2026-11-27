@@ -1,0 +1,204 @@
+openapi: 3.1.0
+info:
+  title: BuddyUp API
+  version: 0.1.0
+  description: Contrato inicial para integração. As operações planejadas estão disponíveis no mock de desenvolvimento.
+servers:
+  - url: /
+tags:
+  - name: Catalog
+    description: Jogos e configurações de descoberta.
+  - name: Matchmaking
+    description: Publicações, candidaturas e convites.
+paths:
+  /v1/games:
+    get:
+      tags: [Catalog]
+      operationId: listGames
+      summary: Listar jogos do catálogo
+      x-buddyup-implementation: planned
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Página de jogos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GamePage'
+              example:
+                items:
+                  - id: 31d02091-dfdb-4e59-bfcf-552dbd93bcbe
+                    name: VALORANT
+                nextCursor: null
+        '400':
+          description: Parâmetros de paginação inválidos
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiProblem'
+              example:
+                type: about:blank
+                title: Bad Request
+                status: 400
+                code: INVALID_PAGINATION
+  /v1/interactions/{interactionId}/accept:
+    post:
+      tags: [Matchmaking]
+      operationId: acceptInteraction
+      summary: Aceitar uma candidatura ou um convite
+      x-buddyup-implementation: planned
+      x-buddyup-session: required
+      description: Requer sessão e autorização sobre a interação. O mecanismo da sessão será especificado na SEG-01.
+      parameters:
+        - name: interactionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Interação aceita
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AcceptedInteraction'
+              example:
+                id: 346da57c-ddca-4ed8-844e-3632de47f125
+                status: ACCEPTED
+        '401':
+          description: Sessão ausente, expirada ou inválida
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiProblem'
+              example:
+                type: about:blank
+                title: Unauthorized
+                status: 401
+                code: SESSION_REQUIRED
+        '403':
+          description: A sessão existe e o ator não tem permissão para a ação
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiProblem'
+              example:
+                type: about:blank
+                title: Forbidden
+                status: 403
+                code: ACTION_FORBIDDEN
+        '404':
+          description: Interação inexistente ou invisível para o ator
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiProblem'
+              example:
+                type: about:blank
+                title: Not Found
+                status: 404
+                code: INTERACTION_NOT_FOUND
+        '409':
+          description: Conflito com o estado atual da interação ou da vaga
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiProblem'
+              example:
+                type: about:blank
+                title: Conflict
+                status: 409
+                code: SLOT_UNAVAILABLE
+        '422':
+          description: A solicitação é válida, mas as regras de elegibilidade impedem o aceite
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiProblem'
+              example:
+                type: about:blank
+                title: Unprocessable Content
+                status: 422
+                code: INCOMPATIBLE_REQUIREMENTS
+components:
+  parameters:
+    Cursor:
+      name: cursor
+      in: query
+      description: Valor opaco retornado pela página anterior, válido para os mesmos filtros e ordenação.
+      schema:
+        type: string
+        minLength: 1
+    Limit:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+  schemas:
+    Game:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+    GamePage:
+      type: object
+      required: [items, nextCursor]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Game'
+        nextCursor:
+          type: [string, 'null']
+          description: Cursor da página seguinte ou nulo quando não houver mais resultados.
+    AcceptedInteraction:
+      type: object
+      required: [id, status]
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [ACCEPTED]
+    ApiProblem:
+      type: object
+      required: [type, title, status, code]
+      properties:
+        type:
+          type: string
+          format: uri-reference
+        title:
+          type: string
+          description: Descrição curta para diagnóstico humano.
+        status:
+          type: integer
+          minimum: 400
+          maximum: 599
+        code:
+          type: string
+          description: Código estável que o cliente usa para decidir a mensagem e o comportamento.
+        detail:
+          type: string
+          description: Detalhe seguro para diagnóstico.
+        fieldErrors:
+          type: array
+          items:
+            type: object
+            required: [field, code]
+            properties:
+              field:
+                type: string
+              code:
+                type: string

@@ -1,0 +1,4 @@
+extends:
+  - minimal
+rules:
+  security-defined: off
