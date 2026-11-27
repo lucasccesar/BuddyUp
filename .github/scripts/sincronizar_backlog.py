@@ -3,11 +3,13 @@ import json
 import os
 import subprocess
 
+REPOSITORY = "lucasccesar/BuddyUp"
 FIELDS = """
     id isArchived
     fieldValueByName(name: "Status") { ... on ProjectV2ItemFieldSingleSelectValue { name } }
     content { ... on Issue {
-        number state stateReason repository { nameWithOwner }
+        id number state stateReason repository { nameWithOwner }
+        assignees { totalCount }
         labels(first: 50) { pageInfo { hasNextPage } nodes { name } }
         blockedBy(first: 50) { pageInfo { hasNextPage } nodes { state stateReason } }
     } }
@@ -30,6 +32,25 @@ mutation($input:UpdateProjectV2ItemFieldValueInput!) {
   updateProjectV2ItemFieldValue(input:$input) { projectV2Item { id } }
 }
 """
+ADD = """
+mutation($project:ID!, $content:ID!) {
+  addProjectV2ItemById(input:{projectId:$project, contentId:$content}) {
+    item { id isArchived fieldValueByName(name:"Status") {
+      ... on ProjectV2ItemFieldSingleSelectValue { name }
+    } }
+  }
+}
+"""
+REPOSITORY_QUERY = """
+query($after:String) {
+  repository(owner:"lucasccesar", name:"BuddyUp") {
+    CONNECTION(states:OPEN, first:25, after:$after) {
+      pageInfo { hasNextPage endCursor }
+      nodes { SELECTION }
+    }
+  }
+}
+"""
 
 
 def graphql(query, **variables):
@@ -48,10 +69,41 @@ def completed(issue):
     return issue["state"] == "CLOSED" and issue["stateReason"] == "COMPLETED"
 
 
-def next_status(item):
+def repository_nodes(connection, fields):
+    query = REPOSITORY_QUERY.replace("CONNECTION", connection).replace("SELECTION", fields)
+    after = None
+    while True:
+        page = graphql(query, after=after)["repository"][connection]
+        yield from page["nodes"]
+        if not page["pageInfo"]["hasNextPage"]:
+            break
+        after = page["pageInfo"]["endCursor"]
+
+
+def repository_cards():
+    issues = list(repository_nodes("issues", "id number"))
+    reviews = {}
+    prs = repository_nodes("pullRequests", """
+        isCrossRepository baseRefName isDraft
+        closingIssuesReferences(first:25) { nodes { number repository { nameWithOwner } } }
+    """)
+    for pr in prs:
+        if pr["isCrossRepository"] or pr["baseRefName"] != "main":
+            continue
+        for issue in pr["closingIssuesReferences"]["nodes"]:
+            if issue["repository"]["nameWithOwner"] == REPOSITORY:
+                number = issue["number"]
+                if not pr["isDraft"]:
+                    reviews[number] = "ready"
+                else:
+                    reviews.setdefault(number, "draft")
+    return issues, reviews
+
+
+def next_status(item, reviews=None):
     issue = item.get("content") or {}
     status = (item.get("fieldValueByName") or {}).get("name")
-    if item["isArchived"] or issue.get("repository", {}).get("nameWithOwner") != "lucasccesar/BuddyUp":
+    if item["isArchived"] or issue.get("repository", {}).get("nameWithOwner") != REPOSITORY:
         return None
     if completed(issue):
         return "Concluída" if status != "Concluída" else None
@@ -72,7 +124,23 @@ def next_status(item):
     if status in {None, "Backlog", "Concluída"}:
         target = "Pronta" if "triada" in labels and not blocked else "Backlog"
         return target if status != target else None
+    if blocked:
+        return None
+    review = (reviews or {}).get(issue["number"])
+    ready = review == "ready" or "revisar" in labels
+    if status in {"Pronta", "Em andamento"} and ready:
+        return "Em revisão"
+    if status == "Em revisão" and review == "draft" and not ready:
+        return "Em andamento"
+    if status == "Pronta" and (issue["assignees"]["totalCount"] or review == "draft"):
+        return "Em andamento"
     return None
+
+
+def set_status(project, item_id, option):
+    graphql(UPDATE, input={"projectId": project["id"], "itemId": item_id,
+                           "fieldId": project["field"]["id"],
+                           "value": {"singleSelectOptionId": option}})
 
 
 def main():
@@ -95,20 +163,30 @@ def main():
     options = {option["name"]: option["id"] for option in project["field"]["options"]}
     if not {"Backlog", "Pronta", "Em andamento", "Em revisão", "Concluída"} <= options.keys():
         raise SystemExit("Os estados esperados não estão configurados no quadro.")
+    issues, reviews = repository_cards()
+    existing = {(item.get("content") or {}).get("id") for item in items}
     count = 0
+    for issue in issues:
+        if issue["id"] in existing:
+            continue
+        if apply:
+            item = graphql(ADD, project=project["id"], content=issue["id"])["addProjectV2ItemById"]["item"]
+            if item["isArchived"] or item.get("fieldValueByName"):
+                continue
+            set_status(project, item["id"], options["Backlog"])
+        count += 1
+        print(f"#{issue['number']} → Backlog (novo cartão)")
     for item in items:
-        target = next_status(item)
+        target = next_status(item, reviews)
         if not target:
             continue
         if apply:
             current = graphql(RECHECK, id=item["id"])["node"]
             if not current or current.get("fieldValueByName") != item.get("fieldValueByName"):
                 continue
-            if next_status(current) != target:
+            if next_status(current, reviews) != target:
                 continue
-            graphql(UPDATE, input={"projectId": project["id"], "itemId": item["id"],
-                                  "fieldId": project["field"]["id"],
-                                  "value": {"singleSelectOptionId": options[target]}})
+            set_status(project, item["id"], options[target])
         count += 1
         print(f"#{item['content']['number']} → {target}")
     print(f"{len(items)} cartões conferidos. {count} mudanças {'aplicadas' if apply else 'previstas'}.")
