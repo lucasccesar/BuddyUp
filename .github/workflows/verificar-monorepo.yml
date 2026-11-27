@@ -19,7 +19,6 @@ jobs:
           java-version: '21'
           cache: maven
           cache-dependency-path: backend/pom.xml
-      - run: docker compose up -d --wait postgres
       - run: sh ./mvnw -B verify
         working-directory: backend
 
