@@ -10,7 +10,506 @@ tags:
     description: Jogos e configurações de descoberta.
   - name: Matchmaking
     description: Publicações, candidaturas e convites.
+  - name: Accounts
+    description: Autenticação, sessões e métodos de acesso.
+  - name: Administration
+    description: Permissões da equipe interna.
 paths:
+  /v1/auth/login:
+    post:
+      tags: [Accounts]
+      operationId: loginWithPassword
+      summary: Entrar com e-mail e senha
+      x-buddyup-implementation: planned
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordLogin'
+      responses:
+        '200':
+          $ref: '#/components/responses/SessionCreated'
+        '401':
+          $ref: '#/components/responses/InvalidCredentials'
+        '429':
+          $ref: '#/components/responses/AttemptsLimited'
+  /v1/auth/session:
+    get:
+      tags: [Accounts]
+      operationId: getCurrentSession
+      summary: Consultar a sessão atual e retomar a conta
+      x-buddyup-implementation: planned
+      security:
+        - webSession: []
+        - nativeSession: []
+      responses:
+        '200':
+          description: Contexto atual da conta. No navegador, inclui a prova usada para proteger comandos.
+          headers:
+            Cache-Control:
+              $ref: '#/components/headers/NoStore'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionContext'
+        '401':
+          $ref: '#/components/responses/SessionUnauthorized'
+    delete:
+      tags: [Accounts]
+      operationId: logout
+      summary: Encerrar a sessão deste navegador ou aparelho
+      x-buddyup-implementation: planned
+      security:
+        - webSession: []
+          csrfToken: []
+        - nativeSession: []
+      responses:
+        '204':
+          description: Sessão revogada. No navegador, expira o cookie de sessão.
+          headers:
+            Set-Cookie:
+              $ref: '#/components/headers/WebSessionCookie'
+        '401':
+          $ref: '#/components/responses/SessionUnauthorized'
+  /v1/auth/reauthentications:
+    post:
+      tags: [Accounts]
+      operationId: createReauthentication
+      summary: Confirmar novamente o acesso para uma ação sensível
+      x-buddyup-implementation: planned
+      security:
+        - webSession: []
+          csrfToken: []
+        - nativeSession: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReauthenticationRequest'
+      responses:
+        '200':
+          description: Prova de uso único vinculada à conta, à sessão e à finalidade.
+          headers:
+            Cache-Control:
+              $ref: '#/components/headers/NoStore'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReauthenticationProof'
+        '401':
+          $ref: '#/components/responses/InvalidCredentials'
+        '429':
+          $ref: '#/components/responses/AttemptsLimited'
+  /v1/auth/social/{provider}/flows:
+    parameters:
+      - $ref: '#/components/parameters/IdentityProvider'
+    post:
+      tags: [Accounts]
+      operationId: startSocialAuthorization
+      summary: Iniciar verificação de identidade com Google ou Apple
+      x-buddyup-implementation: planned
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProviderFlowRequest'
+      responses:
+        '200':
+          description: Fluxo de autorização com retorno vinculado ao cliente.
+          headers:
+            Cache-Control:
+              $ref: '#/components/headers/NoStore'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProviderFlow'
+        '429':
+          $ref: '#/components/responses/AttemptsLimited'
+  /v1/auth/social/{provider}/proofs:
+    parameters:
+      - $ref: '#/components/parameters/IdentityProvider'
+    post:
+      tags: [Accounts]
+      operationId: exchangeSocialAuthorization
+      summary: Validar o código de autorização entregue pelo fluxo
+      x-buddyup-implementation: planned
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProviderProofRequest'
+      responses:
+        '200':
+          description: Prova de identidade validada pelo BuddyUp. Isoladamente, não abre sessão nem vincula uma conta.
+          headers:
+            Cache-Control:
+              $ref: '#/components/headers/NoStore'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProviderProof'
+        '401':
+          $ref: '#/components/responses/InvalidCredentials'
+        '429':
+          $ref: '#/components/responses/AttemptsLimited'
+  /v1/auth/social/{provider}/login:
+    parameters:
+      - $ref: '#/components/parameters/IdentityProvider'
+    post:
+      tags: [Accounts]
+      operationId: loginWithProvider
+      summary: Entrar com identidade Google ou Apple validada
+      x-buddyup-implementation: planned
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SocialLogin'
+      responses:
+        '200':
+          $ref: '#/components/responses/SessionCreated'
+        '401':
+          $ref: '#/components/responses/InvalidCredentials'
+        '409':
+          $ref: '#/components/responses/AccountProofRequired'
+        '429':
+          $ref: '#/components/responses/AttemptsLimited'
+  /v1/auth/registration/email-challenges:
+    post:
+      tags: [Accounts]
+      operationId: startEmailRegistration
+      summary: Solicitar o código para confirmar o e-mail de cadastro
+      x-buddyup-implementation: planned
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailRequest'
+      responses:
+        '202':
+          description: Solicitação recebida. A resposta tem o mesmo formato se o endereço já estiver cadastrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailChallenge'
+        '429':
+          $ref: '#/components/responses/AttemptsLimited'
+  /v1/auth/registration/email-confirmations:
+    post:
+      tags: [Accounts]
+      operationId: confirmRegistrationEmail
+      summary: Confirmar e-mail com código de uso único
+      x-buddyup-implementation: planned
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailConfirmation'
+      responses:
+        '200':
+          description: Prova de confirmação para retomar o cadastro.
+          headers:
+            Cache-Control:
+              $ref: '#/components/headers/NoStore'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegistrationProof'
+        '401':
+          $ref: '#/components/responses/InvalidCredentials'
+        '429':
+          $ref: '#/components/responses/AttemptsLimited'
+  /v1/auth/registration:
+    post:
+      tags: [Accounts]
+      operationId: completeEmailRegistration
+      summary: Concluir cadastro por e-mail após confirmação válida
+      x-buddyup-implementation: planned
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailRegistration'
+      responses:
+        '201':
+          description: Conta criada, com acesso pelos métodos de login configurados.
+        '401':
+          $ref: '#/components/responses/InvalidCredentials'
+        '409':
+          $ref: '#/components/responses/AccountDataConflict'
+  /v1/accounts/me/profile-completion:
+    post:
+      tags: [Accounts]
+      operationId: completeSocialProfile
+      summary: Concluir o perfil após o primeiro login social
+      x-buddyup-implementation: planned
+      security:
+        - webSession: []
+          csrfToken: []
+        - nativeSession: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RequiredProfile'
+      responses:
+        '204':
+          description: Perfil concluído e conta ativada.
+        '401':
+          $ref: '#/components/responses/SessionUnauthorized'
+        '409':
+          $ref: '#/components/responses/AccountDataConflict'
+  /v1/auth/password-reset-requests:
+    post:
+      tags: [Accounts]
+      operationId: requestPasswordReset
+      summary: Solicitar link de redefinição de senha
+      x-buddyup-implementation: planned
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailRequest'
+      responses:
+        '202':
+          description: Solicitação recebida, independentemente da existência do e-mail.
+        '429':
+          $ref: '#/components/responses/AttemptsLimited'
+  /v1/auth/password-resets:
+    post:
+      tags: [Accounts]
+      operationId: resetPassword
+      summary: Redefinir a senha e revogar todas as sessões
+      x-buddyup-implementation: planned
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordReset'
+      responses:
+        '204':
+          description: Senha redefinida e sessões revogadas.
+        '401':
+          $ref: '#/components/responses/InvalidCredentials'
+  /v1/accounts/me/password:
+    put:
+      tags: [Accounts]
+      operationId: setFirstPassword
+      summary: Configurar acesso por senha para uma conta criada por login social
+      x-buddyup-implementation: planned
+      security:
+        - webSession: []
+          csrfToken: []
+        - nativeSession: []
+      parameters:
+        - $ref: '#/components/parameters/ReauthenticationToken'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [password]
+              properties:
+                password: { type: string, minLength: 1, writeOnly: true }
+      responses:
+        '204':
+          description: Acesso por e-mail e senha configurado para um endereço já confirmado.
+        '401':
+          $ref: '#/components/responses/SessionUnauthorized'
+        '403':
+          $ref: '#/components/responses/FreshAuthenticationRequired'
+        '409':
+          description: O e-mail ainda precisa ser confirmado ou a conta já tem senha cadastrada.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiProblem'
+              examples:
+                EMAIL_CONFIRMATION_REQUIRED:
+                  value: { type: 'about:blank', title: Conflict, status: 409, code: EMAIL_CONFIRMATION_REQUIRED }
+                PASSWORD_ALREADY_SET:
+                  value: { type: 'about:blank', title: Conflict, status: 409, code: PASSWORD_ALREADY_SET }
+  /v1/accounts/me/email-change-requests:
+    post:
+      tags: [Accounts]
+      operationId: requestEmailChange
+      summary: Solicitar a confirmação de um novo e-mail
+      x-buddyup-implementation: planned
+      security:
+        - webSession: []
+          csrfToken: []
+        - nativeSession: []
+      parameters:
+        - $ref: '#/components/parameters/ReauthenticationToken'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailRequest'
+      responses:
+        '202':
+          description: Código de verificação encaminhado ao novo e-mail.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailChallenge'
+        '401':
+          $ref: '#/components/responses/SessionUnauthorized'
+        '403':
+          $ref: '#/components/responses/FreshAuthenticationRequired'
+  /v1/accounts/me/email-change-confirmations:
+    post:
+      tags: [Accounts]
+      operationId: confirmEmailChange
+      summary: Efetivar a troca e avisar o endereço antigo
+      x-buddyup-implementation: planned
+      security:
+        - webSession: []
+          csrfToken: []
+        - nativeSession: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailConfirmation'
+      responses:
+        '204':
+          description: Novo endereço validado e troca concluída.
+        '401':
+          $ref: '#/components/responses/SessionUnauthorized'
+        '409':
+          $ref: '#/components/responses/AccountDataConflict'
+  /v1/accounts/me:
+    delete:
+      tags: [Accounts]
+      operationId: deleteCurrentAccount
+      summary: Excluir a conta após confirmação de identidade
+      x-buddyup-implementation: planned
+      security:
+        - webSession: []
+          csrfToken: []
+        - nativeSession: []
+      parameters:
+        - $ref: '#/components/parameters/ReauthenticationToken'
+      responses:
+        '204':
+          description: Conta excluída e sessões revogadas.
+        '401':
+          $ref: '#/components/responses/SessionUnauthorized'
+        '403':
+          $ref: '#/components/responses/FreshAuthenticationRequired'
+  /v1/accounts/me/login-identities/{provider}:
+    parameters:
+      - $ref: '#/components/parameters/IdentityProvider'
+    put:
+      tags: [Accounts]
+      operationId: linkLoginIdentity
+      summary: Vincular Google ou Apple à conta autenticada
+      x-buddyup-implementation: planned
+      security:
+        - webSession: []
+          csrfToken: []
+        - nativeSession: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IdentityLinkRequest'
+      responses:
+        '204':
+          description: Identidade vinculada, ou já vinculada à mesma conta.
+        '401':
+          $ref: '#/components/responses/SessionUnauthorized'
+        '403':
+          $ref: '#/components/responses/FreshAuthenticationRequired'
+        '409':
+          $ref: '#/components/responses/IdentityConflict'
+    delete:
+      tags: [Accounts]
+      operationId: unlinkLoginIdentity
+      summary: Desvincular método de login
+      x-buddyup-implementation: planned
+      security:
+        - webSession: []
+          csrfToken: []
+        - nativeSession: []
+      parameters:
+        - $ref: '#/components/parameters/ReauthenticationToken'
+      responses:
+        '204':
+          description: Método desvinculado ou já ausente.
+        '401':
+          $ref: '#/components/responses/SessionUnauthorized'
+        '403':
+          $ref: '#/components/responses/FreshAuthenticationRequired'
+        '409':
+          description: É necessário configurar outro método de login antes de remover o último.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiProblem'
+              example: { type: 'about:blank', title: Conflict, status: 409, code: LAST_LOGIN_METHOD }
+  /v1/admin/accounts/{accountId}/roles:
+    put:
+      tags: [Administration]
+      operationId: replaceAccountRoles
+      summary: Atualizar os cargos internos de uma conta
+      description: Operação do painel web reservada ao Dono. Registra autor, data e motivo.
+      x-buddyup-implementation: planned
+      security:
+        - webSession: []
+          csrfToken: []
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoleChangeRequest'
+      responses:
+        '204':
+          description: Cargos atualizados e alteração registrada em auditoria.
+        '401':
+          $ref: '#/components/responses/SessionUnauthorized'
+        '403':
+          description: O ator não é Dono ou precisa confirmar novamente o acesso.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiProblem'
+              examples:
+                ROLE_FORBIDDEN:
+                  value: { type: 'about:blank', title: Forbidden, status: 403, code: ROLE_FORBIDDEN }
+                REAUTHENTICATION_REQUIRED:
+                  value: { type: 'about:blank', title: Forbidden, status: 403, code: REAUTHENTICATION_REQUIRED }
   /v1/games:
     get:
       tags: [Catalog]
@@ -50,8 +549,11 @@ paths:
       operationId: acceptInteraction
       summary: Aceitar uma candidatura ou um convite
       x-buddyup-implementation: planned
-      x-buddyup-session: required
-      description: Requer sessão e autorização sobre a interação. O mecanismo da sessão será especificado na SEG-01.
+      description: Requer sessão e autorização sobre a interação.
+      security:
+        - webSession: []
+          csrfToken: []
+        - nativeSession: []
       parameters:
         - name: interactionId
           in: path
@@ -125,7 +627,133 @@ paths:
                 status: 422
                 code: INCOMPATIBLE_REQUIREMENTS
 components:
+  securitySchemes:
+    webSession:
+      type: apiKey
+      in: cookie
+      name: __Host-buddyup_session
+      description: Sessão opaca do navegador.
+    csrfToken:
+      type: apiKey
+      in: header
+      name: X-CSRF-Token
+      description: Prova vinculada à sessão do navegador e exigida nos comandos autenticados.
+    nativeSession:
+      type: http
+      scheme: bearer
+      bearerFormat: Opaque
+      description: Credencial opaca emitida pelo BuddyUp para a sessão nativa.
+  headers:
+    NoStore:
+      description: Resposta sensível sem armazenamento em cache.
+      schema: { type: string, const: no-store }
+    WebSessionCookie:
+      description: 'Cookie de navegador __Host-buddyup_session com Secure, HttpOnly, Path=/ e SameSite=Lax.'
+      schema: { type: string }
+  responses:
+    SessionCreated:
+      description: Sessão iniciada. O navegador recebe a credencial em cookie; o aplicativo recebe o token no corpo.
+      headers:
+        Cache-Control:
+          $ref: '#/components/headers/NoStore'
+        Set-Cookie:
+          $ref: '#/components/headers/WebSessionCookie'
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/WebLoginResult'
+              - $ref: '#/components/schemas/NativeLoginResult'
+          examples:
+            WEB_SESSION:
+              value:
+                client: WEB
+                session:
+                  accountId: 346da57c-ddca-4ed8-844e-3632de47f125
+                  accountStage: ACTIVE
+                  rememberMe: false
+                  roles: []
+                  csrfToken: example-csrf-token
+            REMEMBERED_NATIVE_SESSION:
+              value:
+                client: MOBILE
+                session:
+                  accountId: 346da57c-ddca-4ed8-844e-3632de47f125
+                  accountStage: ACTIVE
+                  rememberMe: true
+                  roles: []
+                sessionToken: example-native-session
+    SessionUnauthorized:
+      description: Sessão ausente, inválida, expirada ou revogada.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ApiProblem'
+          examples:
+            SESSION_REQUIRED:
+              value: { type: 'about:blank', title: Unauthorized, status: 401, code: SESSION_REQUIRED }
+            SESSION_REVOKED:
+              value: { type: 'about:blank', title: Unauthorized, status: 401, code: SESSION_REVOKED }
+    InvalidCredentials:
+      description: Credenciais, código ou prova de acesso inválidos.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ApiProblem'
+          example: { type: 'about:blank', title: Unauthorized, status: 401, code: AUTHENTICATION_FAILED }
+    AccountProofRequired:
+      description: Confirme o acesso à conta existente antes de vincular a identidade. Nenhuma nova sessão é emitida.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ApiProblem'
+          examples:
+            ACCOUNT_PROOF_REQUIRED:
+              value: { type: 'about:blank', title: Conflict, status: 409, code: ACCOUNT_PROOF_REQUIRED }
+    IdentityConflict:
+      description: Identidade vinculada a outra conta ou conta já vinculada a outra identidade do mesmo provedor.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ApiProblem'
+          examples:
+            IDENTITY_ALREADY_LINKED:
+              value: { type: 'about:blank', title: Conflict, status: 409, code: IDENTITY_ALREADY_LINKED }
+    FreshAuthenticationRequired:
+      description: A ação exige nova confirmação de acesso para a finalidade solicitada.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ApiProblem'
+          example: { type: 'about:blank', title: Forbidden, status: 403, code: REAUTHENTICATION_REQUIRED }
+    AttemptsLimited:
+      description: Limite de tentativas atingido.
+      headers:
+        Retry-After:
+          schema: { type: integer, minimum: 1 }
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ApiProblem'
+          example: { type: 'about:blank', title: Too Many Requests, status: 429, code: TOO_MANY_ATTEMPTS }
+    AccountDataConflict:
+      description: Dado em conflito com outra conta. Retorne apenas o código aplicável à operação.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ApiProblem'
+          example: { type: 'about:blank', title: Conflict, status: 409, code: ACCOUNT_DATA_CONFLICT }
   parameters:
+    IdentityProvider:
+      name: provider
+      in: path
+      required: true
+      schema: { type: string, enum: [google, apple] }
+    ReauthenticationToken:
+      name: X-Reauthentication-Token
+      in: header
+      required: true
+      schema: { type: string, minLength: 1 }
     Cursor:
       name: cursor
       in: query
@@ -142,6 +770,172 @@ components:
         maximum: 100
         default: 20
   schemas:
+    LoginIntent:
+      type: object
+      required: [client]
+      properties:
+        client: { type: string, enum: [WEB, MOBILE] }
+        rememberMe:
+          type: boolean
+          default: false
+          description: Persiste a sessão neste navegador ou aparelho entre usos.
+    PasswordLogin:
+      allOf:
+        - $ref: '#/components/schemas/LoginIntent'
+        - type: object
+          required: [email, password]
+          properties:
+            email: { type: string, format: email }
+            password: { type: string, minLength: 1, writeOnly: true }
+    SocialLogin:
+      allOf:
+        - $ref: '#/components/schemas/LoginIntent'
+        - type: object
+          required: [providerProof]
+          properties:
+            providerProof: { type: string, minLength: 1, writeOnly: true }
+    ProviderFlowRequest:
+      type: object
+      required: [client, codeChallenge]
+      properties:
+        client: { type: string, enum: [WEB, MOBILE] }
+        codeChallenge: { type: string, pattern: '^[A-Za-z0-9_-]{43}$' }
+    ProviderFlow:
+      type: object
+      required: [flowId, authorizationUrl]
+      properties:
+        flowId: { type: string, minLength: 1 }
+        authorizationUrl: { type: string, format: uri }
+    ProviderProofRequest:
+      type: object
+      required: [flowId, exchangeCode, codeVerifier]
+      properties:
+        flowId: { type: string, minLength: 1 }
+        exchangeCode: { type: string, minLength: 1, writeOnly: true }
+        codeVerifier: { type: string, pattern: '^[A-Za-z0-9._~-]{43,128}$', writeOnly: true }
+    ProviderProof:
+      type: object
+      required: [providerProof]
+      properties:
+        providerProof: { type: string, minLength: 1 }
+    AccountStage:
+      type: string
+      enum: [PROFILE_REQUIRED, ACTIVE]
+    StaffRole:
+      type: string
+      enum: [CATALOG, MODERATION, OWNER]
+    SessionContext:
+      type: object
+      required: [accountId, accountStage, rememberMe, roles]
+      properties:
+        accountId: { type: string, format: uuid }
+        accountStage:
+          $ref: '#/components/schemas/AccountStage'
+        rememberMe: { type: boolean }
+        roles:
+          type: array
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/StaffRole'
+        csrfToken:
+          type: string
+          minLength: 1
+          description: Disponível apenas para sessão de navegador.
+    WebLoginResult:
+      type: object
+      required: [client, session]
+      properties:
+        client: { type: string, const: WEB }
+        session:
+          $ref: '#/components/schemas/SessionContext'
+    NativeLoginResult:
+      type: object
+      required: [client, session, sessionToken]
+      properties:
+        client: { type: string, const: MOBILE }
+        session:
+          $ref: '#/components/schemas/SessionContext'
+        sessionToken: { type: string, minLength: 1 }
+    ReauthenticationRequest:
+      type: object
+      required: [purpose]
+      properties:
+        purpose: { type: string, enum: [LINK_IDENTITY, UNLINK_IDENTITY, SET_PASSWORD, CHANGE_EMAIL, DELETE_ACCOUNT, CHANGE_ROLES] }
+        password: { type: string, minLength: 1, writeOnly: true }
+        providerProof: { type: string, minLength: 1, writeOnly: true }
+      oneOf:
+        - required: [password]
+        - required: [providerProof]
+    ReauthenticationProof:
+      type: object
+      required: [reauthenticationToken]
+      properties:
+        reauthenticationToken: { type: string, minLength: 1 }
+    IdentityLinkRequest:
+      type: object
+      required: [providerProof, reauthenticationToken]
+      properties:
+        providerProof: { type: string, minLength: 1, writeOnly: true }
+        reauthenticationToken: { type: string, minLength: 1, writeOnly: true }
+    RoleChangeRequest:
+      type: object
+      required: [roles, reason, reauthenticationToken]
+      properties:
+        roles:
+          type: array
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/StaffRole'
+        reason: { type: string, minLength: 1 }
+        reauthenticationToken: { type: string, minLength: 1, writeOnly: true }
+    EmailRequest:
+      type: object
+      required: [email]
+      properties:
+        email: { type: string, format: email }
+    EmailChallenge:
+      type: object
+      required: [challengeId]
+      properties:
+        challengeId: { type: string, minLength: 1 }
+    EmailConfirmation:
+      type: object
+      required: [challengeId, code]
+      properties:
+        challengeId: { type: string, minLength: 1 }
+        code: { type: string, minLength: 1, writeOnly: true }
+    RegistrationProof:
+      type: object
+      required: [registrationToken]
+      properties:
+        registrationToken: { type: string, minLength: 1 }
+    RequiredProfile:
+      type: object
+      required: [name, nickname, region, languages, confirmsAdultAge]
+      properties:
+        name: { type: string, minLength: 1 }
+        nickname: { type: string, minLength: 1 }
+        region: { type: string, minLength: 1 }
+        languages:
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items: { type: string, minLength: 1 }
+        confirmsAdultAge: { type: boolean, const: true }
+    EmailRegistration:
+      type: object
+      required: [registrationToken, password, profile]
+      properties:
+        registrationToken: { type: string, minLength: 1, writeOnly: true }
+        password: { type: string, minLength: 1, writeOnly: true }
+        profile:
+          $ref: '#/components/schemas/RequiredProfile'
+    PasswordReset:
+      type: object
+      required: [resetToken, password]
+      properties:
+        resetToken: { type: string, minLength: 1, writeOnly: true }
+        password: { type: string, minLength: 1, writeOnly: true }
     Game:
       type: object
       required: [id, name]

@@ -66,9 +66,79 @@ test('returns the same catalog contract to a native client', async () => {
 test('returns a documented conflict for an accept command', async () => {
   const response = await fetch(`${baseUrl}/v1/interactions/346da57c-ddca-4ed8-844e-3632de47f125/accept`, {
     method: 'POST',
-    headers: { Prefer: 'code=409' },
+    headers: { Prefer: 'code=409', Authorization: 'Bearer example-native-session' },
   })
   assert.equal(response.status, 409)
   assert.match(response.headers.get('content-type'), /^application\/problem\+json/)
   assert.equal((await response.json()).code, 'SLOT_UNAVAILABLE')
 })
+
+test('documents the response when a session has been revoked', async () => {
+  await assertProblem('/v1/auth/session', {
+    headers: { Authorization: 'Bearer example-revoked-session' },
+  }, 401, 'SESSION_REVOKED')
+})
+
+test('documents the conflict when a provider identity belongs to another account', async () => {
+  await assertProblem('/v1/accounts/me/login-identities/google', {
+    method: 'PUT',
+    headers: { Authorization: 'Bearer example-native-session' },
+    body: { providerProof: 'example-provider-proof', reauthenticationToken: 'example-reauthentication' },
+  }, 409, 'IDENTITY_ALREADY_LINKED')
+})
+
+test('requires account proof when the Google email is externally managed', async () => {
+  await assertProblem('/v1/auth/social/google/login', {
+    method: 'POST',
+    body: { providerProof: 'example-provider-proof', client: 'MOBILE', rememberMe: true },
+  }, 409, 'ACCOUNT_PROOF_REQUIRED')
+})
+
+test('documents the forbidden response for a role change without owner permission', async () => {
+  await assertProblem('/v1/admin/accounts/346da57c-ddca-4ed8-844e-3632de47f125/roles', {
+    method: 'PUT',
+    headers: { Cookie: '__Host-buddyup_session=example-staff-session', 'X-CSRF-Token': 'example-csrf-token' },
+    body: { roles: ['MODERATION'], reason: 'Atualização da equipe', reauthenticationToken: 'example-reauthentication' },
+  }, 403, 'ROLE_FORBIDDEN')
+})
+
+test('documents web login without a bearer credential in the response body', async () => {
+  const result = await passwordLoginExample({ client: 'WEB' }, 'WEB_SESSION')
+  assert.equal(result.session.rememberMe, false)
+  assert.ok(result.session.csrfToken)
+  assert.ok(!Object.hasOwn(result, 'sessionToken'))
+})
+
+test('documents native login with a persistent-session preference', async () => {
+  const result = await passwordLoginExample({ client: 'MOBILE', rememberMe: true }, 'REMEMBERED_NATIVE_SESSION')
+  assert.equal(result.session.rememberMe, true)
+  assert.ok(result.sessionToken)
+  assert.ok(!Object.hasOwn(result.session, 'csrfToken'))
+})
+
+async function passwordLoginExample(intent, example) {
+  const response = await fetch(`${baseUrl}/v1/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Prefer: `example=${example}` },
+    body: JSON.stringify({ email: 'player@example.com', password: 'example-password', ...intent }),
+  })
+
+  assert.equal(response.status, 200)
+  return response.json()
+}
+
+async function assertProblem(path, request, status, code) {
+  const response = await fetch(`${baseUrl}${path}`, {
+    ...request,
+    headers: {
+      ...request.headers,
+      Prefer: `code=${status}, example=${code}`,
+      ...(request.body && { 'Content-Type': 'application/json' }),
+    },
+    body: request.body && JSON.stringify(request.body),
+  })
+
+  assert.equal(response.status, status)
+  assert.match(response.headers.get('content-type'), /^application\/problem\+json/)
+  assert.equal((await response.json()).code, code)
+}

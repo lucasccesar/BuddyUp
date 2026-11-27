@@ -4,6 +4,325 @@
  */
 
 export interface paths {
+    "/v1/auth/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Entrar com e-mail e senha */
+        post: operations["loginWithPassword"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/session": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Consultar a sessão atual e retomar a conta */
+        get: operations["getCurrentSession"];
+        put?: never;
+        post?: never;
+        /** Encerrar a sessão deste navegador ou aparelho */
+        delete: operations["logout"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/reauthentications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Confirmar novamente o acesso para uma ação sensível */
+        post: operations["createReauthentication"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/social/{provider}/flows": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                provider: components["parameters"]["IdentityProvider"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Iniciar verificação de identidade com Google ou Apple */
+        post: operations["startSocialAuthorization"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/social/{provider}/proofs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                provider: components["parameters"]["IdentityProvider"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Validar o código de autorização entregue pelo fluxo */
+        post: operations["exchangeSocialAuthorization"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/social/{provider}/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                provider: components["parameters"]["IdentityProvider"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Entrar com identidade Google ou Apple validada */
+        post: operations["loginWithProvider"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/registration/email-challenges": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Solicitar o código para confirmar o e-mail de cadastro */
+        post: operations["startEmailRegistration"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/registration/email-confirmations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Confirmar e-mail com código de uso único */
+        post: operations["confirmRegistrationEmail"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/registration": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Concluir cadastro por e-mail após confirmação válida */
+        post: operations["completeEmailRegistration"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/accounts/me/profile-completion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Concluir o perfil após o primeiro login social */
+        post: operations["completeSocialProfile"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/password-reset-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Solicitar link de redefinição de senha */
+        post: operations["requestPasswordReset"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/password-resets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Redefinir a senha e revogar todas as sessões */
+        post: operations["resetPassword"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/accounts/me/password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Configurar acesso por senha para uma conta criada por login social */
+        put: operations["setFirstPassword"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/accounts/me/email-change-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Solicitar a confirmação de um novo e-mail */
+        post: operations["requestEmailChange"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/accounts/me/email-change-confirmations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Efetivar a troca e avisar o endereço antigo */
+        post: operations["confirmEmailChange"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/accounts/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Excluir a conta após confirmação de identidade */
+        delete: operations["deleteCurrentAccount"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/accounts/me/login-identities/{provider}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                provider: components["parameters"]["IdentityProvider"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        /** Vincular Google ou Apple à conta autenticada */
+        put: operations["linkLoginIdentity"];
+        post?: never;
+        /** Desvincular método de login */
+        delete: operations["unlinkLoginIdentity"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/accounts/{accountId}/roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Atualizar os cargos internos de uma conta
+         * @description Operação do painel web reservada ao Dono. Registra autor, data e motivo.
+         */
+        put: operations["replaceAccountRoles"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/games": {
         parameters: {
             query?: never;
@@ -32,7 +351,7 @@ export interface paths {
         put?: never;
         /**
          * Aceitar uma candidatura ou um convite
-         * @description Requer sessão e autorização sobre a interação. O mecanismo da sessão será especificado na SEG-01.
+         * @description Requer sessão e autorização sobre a interação.
          */
         post: operations["acceptInteraction"];
         delete?: never;
@@ -45,6 +364,114 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        LoginIntent: {
+            /** @enum {string} */
+            client: "WEB" | "MOBILE";
+            /**
+             * @description Persiste a sessão neste navegador ou aparelho entre usos.
+             * @default false
+             */
+            rememberMe: boolean;
+        };
+        PasswordLogin: components["schemas"]["LoginIntent"] & {
+            /** Format: email */
+            email: string;
+            password: string;
+        };
+        SocialLogin: components["schemas"]["LoginIntent"] & {
+            providerProof: string;
+        };
+        ProviderFlowRequest: {
+            /** @enum {string} */
+            client: "WEB" | "MOBILE";
+            codeChallenge: string;
+        };
+        ProviderFlow: {
+            flowId: string;
+            /** Format: uri */
+            authorizationUrl: string;
+        };
+        ProviderProofRequest: {
+            flowId: string;
+            exchangeCode: string;
+            codeVerifier: string;
+        };
+        ProviderProof: {
+            providerProof: string;
+        };
+        /** @enum {string} */
+        AccountStage: "PROFILE_REQUIRED" | "ACTIVE";
+        /** @enum {string} */
+        StaffRole: "CATALOG" | "MODERATION" | "OWNER";
+        SessionContext: {
+            /** Format: uuid */
+            accountId: string;
+            accountStage: components["schemas"]["AccountStage"];
+            rememberMe: boolean;
+            roles: components["schemas"]["StaffRole"][];
+            /** @description Disponível apenas para sessão de navegador. */
+            csrfToken?: string;
+        };
+        WebLoginResult: {
+            /** @constant */
+            client: "WEB";
+            session: components["schemas"]["SessionContext"];
+        };
+        NativeLoginResult: {
+            /** @constant */
+            client: "MOBILE";
+            session: components["schemas"]["SessionContext"];
+            sessionToken: string;
+        };
+        ReauthenticationRequest: {
+            /** @enum {string} */
+            purpose: "LINK_IDENTITY" | "UNLINK_IDENTITY" | "SET_PASSWORD" | "CHANGE_EMAIL" | "DELETE_ACCOUNT" | "CHANGE_ROLES";
+            password?: string;
+            providerProof?: string;
+        } & (unknown | unknown);
+        ReauthenticationProof: {
+            reauthenticationToken: string;
+        };
+        IdentityLinkRequest: {
+            providerProof: string;
+            reauthenticationToken: string;
+        };
+        RoleChangeRequest: {
+            roles: components["schemas"]["StaffRole"][];
+            reason: string;
+            reauthenticationToken: string;
+        };
+        EmailRequest: {
+            /** Format: email */
+            email: string;
+        };
+        EmailChallenge: {
+            challengeId: string;
+        };
+        EmailConfirmation: {
+            challengeId: string;
+            code: string;
+        };
+        RegistrationProof: {
+            registrationToken: string;
+        };
+        RequiredProfile: {
+            name: string;
+            nickname: string;
+            region: string;
+            languages: string[];
+            /** @constant */
+            confirmsAdultAge: true;
+        };
+        EmailRegistration: {
+            registrationToken: string;
+            password: string;
+            profile: components["schemas"]["RequiredProfile"];
+        };
+        PasswordReset: {
+            resetToken: string;
+            password: string;
+        };
         Game: {
             /** Format: uuid */
             id: string;
@@ -77,18 +504,657 @@ export interface components {
             }[];
         };
     };
-    responses: never;
+    responses: {
+        /** @description Sessão iniciada. O navegador recebe a credencial em cookie; o aplicativo recebe o token no corpo. */
+        SessionCreated: {
+            headers: {
+                "Cache-Control": components["headers"]["NoStore"];
+                "Set-Cookie": components["headers"]["WebSessionCookie"];
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["WebLoginResult"] | components["schemas"]["NativeLoginResult"];
+            };
+        };
+        /** @description Sessão ausente, inválida, expirada ou revogada. */
+        SessionUnauthorized: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["ApiProblem"];
+            };
+        };
+        /** @description Credenciais, código ou prova de acesso inválidos. */
+        InvalidCredentials: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                /**
+                 * @example {
+                 *       "type": "about:blank",
+                 *       "title": "Unauthorized",
+                 *       "status": 401,
+                 *       "code": "AUTHENTICATION_FAILED"
+                 *     }
+                 */
+                "application/problem+json": components["schemas"]["ApiProblem"];
+            };
+        };
+        /** @description Confirme o acesso à conta existente antes de vincular a identidade. Nenhuma nova sessão é emitida. */
+        AccountProofRequired: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["ApiProblem"];
+            };
+        };
+        /** @description Identidade vinculada a outra conta ou conta já vinculada a outra identidade do mesmo provedor. */
+        IdentityConflict: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["ApiProblem"];
+            };
+        };
+        /** @description A ação exige nova confirmação de acesso para a finalidade solicitada. */
+        FreshAuthenticationRequired: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                /**
+                 * @example {
+                 *       "type": "about:blank",
+                 *       "title": "Forbidden",
+                 *       "status": 403,
+                 *       "code": "REAUTHENTICATION_REQUIRED"
+                 *     }
+                 */
+                "application/problem+json": components["schemas"]["ApiProblem"];
+            };
+        };
+        /** @description Limite de tentativas atingido. */
+        AttemptsLimited: {
+            headers: {
+                "Retry-After"?: number;
+                [name: string]: unknown;
+            };
+            content: {
+                /**
+                 * @example {
+                 *       "type": "about:blank",
+                 *       "title": "Too Many Requests",
+                 *       "status": 429,
+                 *       "code": "TOO_MANY_ATTEMPTS"
+                 *     }
+                 */
+                "application/problem+json": components["schemas"]["ApiProblem"];
+            };
+        };
+        /** @description Dado em conflito com outra conta. Retorne apenas o código aplicável à operação. */
+        AccountDataConflict: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                /**
+                 * @example {
+                 *       "type": "about:blank",
+                 *       "title": "Conflict",
+                 *       "status": 409,
+                 *       "code": "ACCOUNT_DATA_CONFLICT"
+                 *     }
+                 */
+                "application/problem+json": components["schemas"]["ApiProblem"];
+            };
+        };
+    };
     parameters: {
+        IdentityProvider: "google" | "apple";
+        ReauthenticationToken: string;
         /** @description Valor opaco retornado pela página anterior, válido para os mesmos filtros e ordenação. */
         Cursor: string;
         Limit: number;
     };
     requestBodies: never;
-    headers: never;
+    headers: {
+        /** @description Resposta sensível sem armazenamento em cache. */
+        NoStore: "no-store";
+        /** @description Cookie de navegador __Host-buddyup_session com Secure, HttpOnly, Path=/ e SameSite=Lax. */
+        WebSessionCookie: string;
+    };
     pathItems: never;
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    loginWithPassword: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PasswordLogin"];
+            };
+        };
+        responses: {
+            200: components["responses"]["SessionCreated"];
+            401: components["responses"]["InvalidCredentials"];
+            429: components["responses"]["AttemptsLimited"];
+        };
+    };
+    getCurrentSession: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Contexto atual da conta. No navegador, inclui a prova usada para proteger comandos. */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["NoStore"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionContext"];
+                };
+            };
+            401: components["responses"]["SessionUnauthorized"];
+        };
+    };
+    logout: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Sessão revogada. No navegador, expira o cookie de sessão. */
+            204: {
+                headers: {
+                    "Set-Cookie": components["headers"]["WebSessionCookie"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["SessionUnauthorized"];
+        };
+    };
+    createReauthentication: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReauthenticationRequest"];
+            };
+        };
+        responses: {
+            /** @description Prova de uso único vinculada à conta, à sessão e à finalidade. */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["NoStore"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReauthenticationProof"];
+                };
+            };
+            401: components["responses"]["InvalidCredentials"];
+            429: components["responses"]["AttemptsLimited"];
+        };
+    };
+    startSocialAuthorization: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                provider: components["parameters"]["IdentityProvider"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProviderFlowRequest"];
+            };
+        };
+        responses: {
+            /** @description Fluxo de autorização com retorno vinculado ao cliente. */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["NoStore"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProviderFlow"];
+                };
+            };
+            429: components["responses"]["AttemptsLimited"];
+        };
+    };
+    exchangeSocialAuthorization: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                provider: components["parameters"]["IdentityProvider"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProviderProofRequest"];
+            };
+        };
+        responses: {
+            /** @description Prova de identidade validada pelo BuddyUp. Isoladamente, não abre sessão nem vincula uma conta. */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["NoStore"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProviderProof"];
+                };
+            };
+            401: components["responses"]["InvalidCredentials"];
+            429: components["responses"]["AttemptsLimited"];
+        };
+    };
+    loginWithProvider: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                provider: components["parameters"]["IdentityProvider"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SocialLogin"];
+            };
+        };
+        responses: {
+            200: components["responses"]["SessionCreated"];
+            401: components["responses"]["InvalidCredentials"];
+            409: components["responses"]["AccountProofRequired"];
+            429: components["responses"]["AttemptsLimited"];
+        };
+    };
+    startEmailRegistration: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EmailRequest"];
+            };
+        };
+        responses: {
+            /** @description Solicitação recebida. A resposta tem o mesmo formato se o endereço já estiver cadastrado. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EmailChallenge"];
+                };
+            };
+            429: components["responses"]["AttemptsLimited"];
+        };
+    };
+    confirmRegistrationEmail: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EmailConfirmation"];
+            };
+        };
+        responses: {
+            /** @description Prova de confirmação para retomar o cadastro. */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["NoStore"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RegistrationProof"];
+                };
+            };
+            401: components["responses"]["InvalidCredentials"];
+            429: components["responses"]["AttemptsLimited"];
+        };
+    };
+    completeEmailRegistration: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EmailRegistration"];
+            };
+        };
+        responses: {
+            /** @description Conta criada, com acesso pelos métodos de login configurados. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["InvalidCredentials"];
+            409: components["responses"]["AccountDataConflict"];
+        };
+    };
+    completeSocialProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RequiredProfile"];
+            };
+        };
+        responses: {
+            /** @description Perfil concluído e conta ativada. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["SessionUnauthorized"];
+            409: components["responses"]["AccountDataConflict"];
+        };
+    };
+    requestPasswordReset: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EmailRequest"];
+            };
+        };
+        responses: {
+            /** @description Solicitação recebida, independentemente da existência do e-mail. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            429: components["responses"]["AttemptsLimited"];
+        };
+    };
+    resetPassword: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PasswordReset"];
+            };
+        };
+        responses: {
+            /** @description Senha redefinida e sessões revogadas. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["InvalidCredentials"];
+        };
+    };
+    setFirstPassword: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Reauthentication-Token": components["parameters"]["ReauthenticationToken"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    password: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Acesso por e-mail e senha configurado para um endereço já confirmado. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["SessionUnauthorized"];
+            403: components["responses"]["FreshAuthenticationRequired"];
+            /** @description O e-mail ainda precisa ser confirmado ou a conta já tem senha cadastrada. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ApiProblem"];
+                };
+            };
+        };
+    };
+    requestEmailChange: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Reauthentication-Token": components["parameters"]["ReauthenticationToken"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EmailRequest"];
+            };
+        };
+        responses: {
+            /** @description Código de verificação encaminhado ao novo e-mail. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EmailChallenge"];
+                };
+            };
+            401: components["responses"]["SessionUnauthorized"];
+            403: components["responses"]["FreshAuthenticationRequired"];
+        };
+    };
+    confirmEmailChange: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EmailConfirmation"];
+            };
+        };
+        responses: {
+            /** @description Novo endereço validado e troca concluída. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["SessionUnauthorized"];
+            409: components["responses"]["AccountDataConflict"];
+        };
+    };
+    deleteCurrentAccount: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Reauthentication-Token": components["parameters"]["ReauthenticationToken"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Conta excluída e sessões revogadas. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["SessionUnauthorized"];
+            403: components["responses"]["FreshAuthenticationRequired"];
+        };
+    };
+    linkLoginIdentity: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                provider: components["parameters"]["IdentityProvider"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IdentityLinkRequest"];
+            };
+        };
+        responses: {
+            /** @description Identidade vinculada, ou já vinculada à mesma conta. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["SessionUnauthorized"];
+            403: components["responses"]["FreshAuthenticationRequired"];
+            409: components["responses"]["IdentityConflict"];
+        };
+    };
+    unlinkLoginIdentity: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Reauthentication-Token": components["parameters"]["ReauthenticationToken"];
+            };
+            path: {
+                provider: components["parameters"]["IdentityProvider"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Método desvinculado ou já ausente. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["SessionUnauthorized"];
+            403: components["responses"]["FreshAuthenticationRequired"];
+            /** @description É necessário configurar outro método de login antes de remover o último. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Conflict",
+                     *       "status": 409,
+                     *       "code": "LAST_LOGIN_METHOD"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["ApiProblem"];
+                };
+            };
+        };
+    };
+    replaceAccountRoles: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                accountId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RoleChangeRequest"];
+            };
+        };
+        responses: {
+            /** @description Cargos atualizados e alteração registrada em auditoria. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["SessionUnauthorized"];
+            /** @description O ator não é Dono ou precisa confirmar novamente o acesso. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ApiProblem"];
+                };
+            };
+        };
+    };
     listGames: {
         parameters: {
             query?: {

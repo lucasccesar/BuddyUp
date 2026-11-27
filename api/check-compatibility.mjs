@@ -13,10 +13,10 @@ const fixture = {
   paths: { '/fixture': { get: { responses: { 200: { description: 'OK' } } } } },
 }
 
-function compare(base, revision) {
+function compare(base, revision, options = []) {
   const diff = spawnSync('docker', [
     'run', '--rm', '--network', 'none', '--mount', `type=bind,source=${directory},target=/specs,readonly`, image,
-    'breaking', '--allow-external-refs=false', '--fail-on', 'ERR', `/specs/${base}`, `/specs/${revision}`,
+    'breaking', '--allow-external-refs=false', '--fail-on', 'ERR', ...options, `/specs/${base}`, `/specs/${revision}`,
   ], { encoding: 'utf8' })
   if (diff.error) throw diff.error
   return diff
@@ -38,7 +38,18 @@ try {
   if (base.status === 0) {
     writeFileSync(join(directory, 'base.yaml'), base.stdout)
     copyFileSync('openapi.yaml', join(directory, 'revision.yaml'))
-    const diff = compare('base.yaml', 'revision.yaml')
+    const baseBlob = spawnSync('git', ['rev-parse', `${baseRef}:api/openapi.yaml`], { encoding: 'utf8' })
+    assert.equal(baseBlob.status, 0, baseBlob.stderr)
+    const legacySessionContract = baseBlob.stdout.trim() === 'fde2a33d422961e1afb0fb0024c4bc65a22910e5'
+    const options = []
+    if (legacySessionContract) {
+      writeFileSync(join(directory, 'legacy-session.ignore'), [
+        'POST /v1/interactions/{interactionId}/accept the endpoint no longer allows anonymous access and now only accepts `csrfToken AND webSession, nativeSession`',
+        '',
+      ].join('\n'))
+      options.push('--err-ignore', '/specs/legacy-session.ignore')
+    }
+    const diff = compare('base.yaml', 'revision.yaml', options)
     process.stdout.write(diff.stdout)
     process.stderr.write(diff.stderr)
     assert.equal(diff.status, 0, 'O diff OpenAPI falhou.')
