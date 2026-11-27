@@ -1,0 +1,22 @@
+{
+  "name": "buddyup-api-contract",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24.18.0 <25"
+  },
+  "scripts": {
+    "lint": "redocly lint openapi.yaml",
+    "generate": "openapi-typescript openapi.yaml -o generated/schema.d.ts",
+    "check:types": "openapi-typescript openapi.yaml -o generated/schema.d.ts --check && tsc --noEmit --strict --target es2022 --module nodenext client.ts",
+    "mock": "prism mock --errors openapi.yaml",
+    "test": "node --test mock.test.mjs",
+    "check:compatibility": "node check-compatibility.mjs"
+  },
+  "devDependencies": {
+    "@redocly/cli": "2.84.0",
+    "@stoplight/prism-cli": "5.16.0",
+    "openapi-typescript": "7.13.0",
+    "typescript": "5.9.3"
+  }
+}
