@@ -52,8 +52,8 @@ class BuddyUpApplicationTest {
 	}
 
 	@Test
-	@DisplayName("[migrate] Should Preserve Account And Registration Proof - When Upgrading From Version Two")
-	void shouldPreserveAccountAndRegistrationProofWhenUpgradingFromVersionTwo() throws Exception {
+	@DisplayName("[migrate] Should Preserve Account And Registration Proof - When Upgrading Through Versions Three And Four")
+	void shouldPreserveAccountAndRegistrationProofWhenUpgradingThroughVersionsThreeAndFour() throws Exception {
 		try (var connection = DriverManager.getConnection(postgres.getJdbcUrl(), postgres.getUsername(), postgres.getPassword());
 				var statement = connection.createStatement()) {
 			statement.execute("create database buddyup_upgrade");
@@ -79,8 +79,11 @@ class BuddyUpApplicationTest {
 			insertProof.executeUpdate();
 		}
 		var migration = Flyway.configure().dataSource(upgradeUrl, postgres.getUsername(), postgres.getPassword())
-				.defaultSchema("public").load().migrate();
+				.defaultSchema("public").target("3").load().migrate();
 		assertThat(migration.targetSchemaVersion).isEqualTo("3");
+		var catalogMigration = Flyway.configure().dataSource(upgradeUrl, postgres.getUsername(), postgres.getPassword())
+				.defaultSchema("public").target("4").load().migrate();
+		assertThat(catalogMigration.targetSchemaVersion).isEqualTo("4");
 		try (var connection = DriverManager.getConnection(upgradeUrl, postgres.getUsername(), postgres.getPassword());
 				var query = connection.prepareStatement("""
 						select a.email_normalized, c.kind, c.consumed_at

@@ -38,6 +38,12 @@ jobs:
           cache-dependency-path: backend/pom.xml
       - run: sh ./mvnw -B verify
         working-directory: backend
+      - name: Verificar carga inicial do catálogo
+        working-directory: backend
+        run: |
+          python3 -m venv "$RUNNER_TEMP/buddyup-catalog-venv"
+          "$RUNNER_TEMP/buddyup-catalog-venv/bin/python" -m pip install -r catalog/requirements.txt
+          "$RUNNER_TEMP/buddyup-catalog-venv/bin/python" -B -m unittest discover -s catalog -v
 
   web:
     name: Web
