@@ -67,6 +67,20 @@ try {
       ].join('\n'))
       options.push('--err-ignore', '/specs/planned-registration.ignore')
     }
+    // These operations were mock-only in this base contract.
+    if (baseBlob.stdout.trim() === '9706f3bd570a5ec224128a2180a89cd7c17747a4') {
+      writeFileSync(join(directory, 'planned-account-recovery.ignore'), [
+        'POST /v1/accounts/me/email-change-confirmations added the pattern `^[0-9]{6}$` to the request property `code`',
+        'POST /v1/accounts/me/email-change-confirmations the `challengeId` request property `format` changed from `none` to `uuid`',
+        'POST /v1/accounts/me/email-change-requests the `email` request property\'s maxLength was set to `254`',
+        'POST /v1/auth/password-reset-requests the `email` request property\'s maxLength was set to `254`',
+        'POST /v1/auth/password-resets the `password` request property\'s maxLength was set to `128`',
+        'POST /v1/auth/password-resets the `password` request property\'s minLength was increased from `1` to `12`',
+        'POST /v1/auth/password-resets added the pattern `^[A-Za-z0-9_-]{43}$` to the request property `resetToken`',
+        '',
+      ].join('\n'))
+      options.push('--err-ignore', '/specs/planned-account-recovery.ignore')
+    }
     const diff = compare('base.yaml', 'revision.yaml', options)
     process.stdout.write(diff.stdout)
     process.stderr.write(diff.stderr)

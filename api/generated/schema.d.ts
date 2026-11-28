@@ -13,7 +13,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Entrar com e-mail e senha */
+        /**
+         * Entrar com e-mail e senha
+         * @description O navegador deve enviar a origem confiável. O app envia a solicitação sem cabeçalho Origin.
+         */
         post: operations["loginWithPassword"];
         delete?: never;
         options?: never;
@@ -48,7 +51,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Confirmar novamente o acesso para uma ação sensível */
+        /**
+         * Confirmar novamente o acesso para uma ação sensível
+         * @description A API já aceita senha atual para CHANGE_EMAIL. As outras finalidades e a confirmação por provedor ainda são planejadas.
+         */
         post: operations["createReauthentication"];
         delete?: never;
         options?: never;
@@ -190,7 +196,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Solicitar link de redefinição de senha */
+        /**
+         * Solicitar link de redefinição de senha
+         * @description O endereço confirmado de uma conta com senha recebe um link válido por 30 minutos.
+         */
         post: operations["requestPasswordReset"];
         delete?: never;
         options?: never;
@@ -241,7 +250,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Solicitar a confirmação de um novo e-mail */
+        /**
+         * Solicitar a confirmação de um novo e-mail
+         * @description Exige reautenticação para CHANGE_EMAIL na mesma sessão. A verificação do novo endereço usa um código de seis dígitos.
+         */
         post: operations["requestEmailChange"];
         delete?: never;
         options?: never;
@@ -258,7 +270,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Efetivar a troca e avisar o endereço antigo */
+        /**
+         * Efetivar a troca e avisar o endereço antigo
+         * @description A confirmação exige a sessão que solicitou a troca.
+         */
         post: operations["confirmEmailChange"];
         delete?: never;
         options?: never;
@@ -453,6 +468,7 @@ export interface components {
             challengeId: string;
         };
         EmailConfirmation: {
+            /** Format: uuid */
             challengeId: string;
             code: string;
         };
@@ -628,6 +644,32 @@ export interface components {
                 "application/problem+json": components["schemas"]["ApiProblem"];
             };
         };
+        /** @description Origem ou CSRF recusado, ou confirmação de acesso necessária. */
+        AccountRequestForbidden: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["ApiProblem"];
+            };
+        };
+        /** @description Configuração ou serviço de acesso temporariamente indisponível. */
+        AccountAccessUnavailable: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                /**
+                 * @example {
+                 *       "type": "about:blank",
+                 *       "title": "Service Unavailable",
+                 *       "status": 503,
+                 *       "code": "ACCOUNT_ACCESS_UNAVAILABLE"
+                 *     }
+                 */
+                "application/problem+json": components["schemas"]["ApiProblem"];
+            };
+        };
         /** @description Limite de tentativas atingido. */
         AttemptsLimited: {
             headers: {
@@ -696,8 +738,11 @@ export interface operations {
         };
         responses: {
             200: components["responses"]["SessionCreated"];
+            400: components["responses"]["RegistrationValidationFailed"];
             401: components["responses"]["InvalidCredentials"];
+            403: components["responses"]["AccountRequestForbidden"];
             429: components["responses"]["AttemptsLimited"];
+            503: components["responses"]["AccountAccessUnavailable"];
         };
     };
     getCurrentSession: {
@@ -713,6 +758,7 @@ export interface operations {
             200: {
                 headers: {
                     "Cache-Control": components["headers"]["NoStore"];
+                    "Set-Cookie": components["headers"]["WebSessionCookie"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -720,6 +766,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["SessionUnauthorized"];
+            403: components["responses"]["AccountRequestForbidden"];
         };
     };
     logout: {
@@ -740,6 +787,7 @@ export interface operations {
                 content?: never;
             };
             401: components["responses"]["SessionUnauthorized"];
+            403: components["responses"]["AccountRequestForbidden"];
         };
     };
     createReauthentication: {
@@ -765,8 +813,19 @@ export interface operations {
                     "application/json": components["schemas"]["ReauthenticationProof"];
                 };
             };
-            401: components["responses"]["InvalidCredentials"];
+            400: components["responses"]["RegistrationValidationFailed"];
+            /** @description Sessão ausente ou revogada, ou senha incorreta. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ApiProblem"];
+                };
+            };
+            403: components["responses"]["AccountRequestForbidden"];
             429: components["responses"]["AttemptsLimited"];
+            503: components["responses"]["AccountAccessUnavailable"];
         };
     };
     startSocialAuthorization: {
@@ -980,7 +1039,9 @@ export interface operations {
                 };
                 content?: never;
             };
+            400: components["responses"]["RegistrationValidationFailed"];
             429: components["responses"]["AttemptsLimited"];
+            503: components["responses"]["AccountAccessUnavailable"];
         };
     };
     resetPassword: {
@@ -1003,6 +1064,7 @@ export interface operations {
                 };
                 content?: never;
             };
+            400: components["responses"]["RegistrationValidationFailed"];
             401: components["responses"]["InvalidCredentials"];
         };
     };
@@ -1067,8 +1129,12 @@ export interface operations {
                     "application/json": components["schemas"]["EmailChallenge"];
                 };
             };
+            400: components["responses"]["RegistrationValidationFailed"];
             401: components["responses"]["SessionUnauthorized"];
-            403: components["responses"]["FreshAuthenticationRequired"];
+            403: components["responses"]["AccountRequestForbidden"];
+            409: components["responses"]["AccountDataConflict"];
+            429: components["responses"]["AttemptsLimited"];
+            503: components["responses"]["AccountAccessUnavailable"];
         };
     };
     confirmEmailChange: {
@@ -1084,15 +1150,26 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Novo endereço validado e troca concluída. */
+            /** @description Novo endereço validado e aviso ao endereço antigo agendado. */
             204: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content?: never;
             };
-            401: components["responses"]["SessionUnauthorized"];
+            400: components["responses"]["RegistrationValidationFailed"];
+            /** @description Sessão ausente ou revogada, ou código inválido, expirado ou consumido. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ApiProblem"];
+                };
+            };
+            403: components["responses"]["AccountRequestForbidden"];
             409: components["responses"]["AccountDataConflict"];
+            429: components["responses"]["AttemptsLimited"];
         };
     };
     deleteCurrentAccount: {

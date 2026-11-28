@@ -28,12 +28,17 @@ class RegistrationMail {
 	}
 
 	void send(JavaMailSender sender, IssuedChallenge challenge) {
+		sendMessage(sender, challenge.email(), "BuddyUp - Código de confirmação de e-mail",
+				"Seu código para continuar o cadastro no BuddyUp é " + challenge.code()
+						+ ". Use somente o código mais recente. Se você não solicitou este cadastro, ignore a mensagem.");
+	}
+
+	void sendMessage(JavaMailSender sender, String recipient, String subject, String body) {
 		var message = new SimpleMailMessage();
 		message.setFrom(settings.from());
-		message.setTo(challenge.email());
-		message.setSubject("BuddyUp - Código de confirmação de e-mail");
-		message.setText("Seu código para continuar o cadastro no BuddyUp é " + challenge.code()
-				+ ". Use somente o código mais recente. Se você não solicitou este cadastro, ignore a mensagem.");
+		message.setTo(recipient);
+		message.setSubject(subject);
+		message.setText(body);
 		try {
 			sender.send(message);
 		} catch (MailException exception) {

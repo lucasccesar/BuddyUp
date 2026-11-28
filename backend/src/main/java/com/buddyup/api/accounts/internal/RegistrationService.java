@@ -34,7 +34,7 @@ class RegistrationService {
 
 	@Transactional
 	IssuedChallenge start(String email, String remoteAddress) {
-		String normalizedEmail = email.strip().toLowerCase(Locale.ROOT);
+		String normalizedEmail = AccountSessions.normalizeEmail(email);
 		String source = secrets.sourceDigest(remoteAddress);
 		lock("registration-source:" + source);
 		lock("registration-email:" + normalizedEmail);
