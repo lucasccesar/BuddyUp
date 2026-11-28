@@ -445,10 +445,19 @@ export interface components {
             /** Format: email */
             email: string;
         };
+        RegistrationEmailRequest: {
+            /** Format: email */
+            email: string;
+        };
         EmailChallenge: {
             challengeId: string;
         };
         EmailConfirmation: {
+            challengeId: string;
+            code: string;
+        };
+        RegistrationEmailConfirmation: {
+            /** Format: uuid */
             challengeId: string;
             code: string;
         };
@@ -466,7 +475,15 @@ export interface components {
         EmailRegistration: {
             registrationToken: string;
             password: string;
-            profile: components["schemas"]["RequiredProfile"];
+            profile: components["schemas"]["EmailRegistrationProfile"];
+        };
+        EmailRegistrationProfile: {
+            name: string;
+            nickname: string;
+            region: string;
+            languages: string[];
+            /** @constant */
+            confirmsAdultAge: true;
         };
         PasswordReset: {
             resetToken: string;
@@ -505,6 +522,40 @@ export interface components {
         };
     };
     responses: {
+        /** @description Corpo ou campos inválidos, incluindo ausência da declaração de 18 anos ou mais. */
+        RegistrationValidationFailed: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                /**
+                 * @example {
+                 *       "type": "about:blank",
+                 *       "title": "Bad Request",
+                 *       "status": 400,
+                 *       "code": "VALIDATION_FAILED"
+                 *     }
+                 */
+                "application/problem+json": components["schemas"]["ApiProblem"];
+            };
+        };
+        /** @description O envio do código está temporariamente indisponível. */
+        RegistrationUnavailable: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                /**
+                 * @example {
+                 *       "type": "about:blank",
+                 *       "title": "Service Unavailable",
+                 *       "status": 503,
+                 *       "code": "REGISTRATION_UNAVAILABLE"
+                 *     }
+                 */
+                "application/problem+json": components["schemas"]["ApiProblem"];
+            };
+        };
         /** @description Sessão iniciada. O navegador recebe a credencial em cookie; o aplicativo recebe o token no corpo. */
         SessionCreated: {
             headers: {
@@ -805,20 +856,23 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["EmailRequest"];
+                "application/json": components["schemas"]["RegistrationEmailRequest"];
             };
         };
         responses: {
             /** @description Solicitação recebida. A resposta tem o mesmo formato se o endereço já estiver cadastrado. */
             202: {
                 headers: {
+                    "Cache-Control": components["headers"]["NoStore"];
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["EmailChallenge"];
                 };
             };
+            400: components["responses"]["RegistrationValidationFailed"];
             429: components["responses"]["AttemptsLimited"];
+            503: components["responses"]["RegistrationUnavailable"];
         };
     };
     confirmRegistrationEmail: {
@@ -830,7 +884,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["EmailConfirmation"];
+                "application/json": components["schemas"]["RegistrationEmailConfirmation"];
             };
         };
         responses: {
@@ -844,6 +898,7 @@ export interface operations {
                     "application/json": components["schemas"]["RegistrationProof"];
                 };
             };
+            400: components["responses"]["RegistrationValidationFailed"];
             401: components["responses"]["InvalidCredentials"];
             429: components["responses"]["AttemptsLimited"];
         };
@@ -861,15 +916,24 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Conta criada, com acesso pelos métodos de login configurados. */
+            /** @description Conta por e-mail criada. A prova de cadastro é consumida. */
             201: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content?: never;
             };
+            400: components["responses"]["RegistrationValidationFailed"];
             401: components["responses"]["InvalidCredentials"];
-            409: components["responses"]["AccountDataConflict"];
+            /** @description E-mail já cadastrado ou nickname ocupado. A prova não é consumida. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ApiProblem"];
+                };
+            };
         };
     };
     completeSocialProfile: {

@@ -49,6 +49,24 @@ try {
       ].join('\n'))
       options.push('--err-ignore', '/specs/legacy-session.ignore')
     }
+    if (baseBlob.stdout.trim() === '954d32c1332b2fee6430316731ee2f55bf91d2d9') {
+      writeFileSync(join(directory, 'planned-registration.ignore'), [
+        'POST /v1/auth/registration the `profile/languages` request property\'s maxItems was set to `20`',
+        'POST /v1/auth/registration the `profile/languages/items` request property\'s maxLength was set to `35`',
+        'POST /v1/auth/registration the `profile/name` request property\'s maxLength was set to `100`',
+        'POST /v1/auth/registration the `profile/nickname` request property\'s maxLength was set to `40`',
+        'POST /v1/auth/registration the `profile/region` request property\'s maxLength was set to `64`',
+        'POST /v1/auth/registration added the pattern `^[A-Za-z]{2,3}(-[A-Za-z0-9]{2,8})*$` to the request property `profile/languages/items`',
+        'POST /v1/auth/registration the `password` request property\'s maxLength was set to `128`',
+        'POST /v1/auth/registration the `password` request property\'s minLength was increased from `1` to `12`',
+        'POST /v1/auth/registration added the pattern `^[A-Za-z0-9_-]{43}$` to the request property `registrationToken`',
+        'POST /v1/auth/registration/email-challenges the `email` request property\'s maxLength was set to `254`',
+        'POST /v1/auth/registration/email-confirmations added the pattern `^[0-9]{6}$` to the request property `code`',
+        'POST /v1/auth/registration/email-confirmations the `challengeId` request property `format` changed from `none` to `uuid`',
+        '',
+      ].join('\n'))
+      options.push('--err-ignore', '/specs/planned-registration.ignore')
+    }
     const diff = compare('base.yaml', 'revision.yaml', options)
     process.stdout.write(diff.stdout)
     process.stderr.write(diff.stderr)

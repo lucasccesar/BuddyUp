@@ -38,3 +38,5 @@ npm run check:compatibility
 Inclua os tipos gerados no commit. O job **Backend** exige lint válido, tipos atualizados, chamadas ao mock e compatibilidade com o contrato da branch de destino. O oasdiff também testa um exemplo conhecido de remoção de operação para verificar que o CI falha quando detecta incompatibilidade. Se uma mudança precisar quebrar o contrato, planeje a transição com os clientes instalados antes de integrar.
 
 A transição da SEG-01 tem uma exceção restrita à versão que marcava o aceite como planejado e protegido por meio de `x-buddyup-session`. Nessa base, o oasdiff interpreta a promoção para `security` como remoção de acesso anônimo. A exceção vale só para esse aviso nessa versão do contrato.
+
+A primeira implementação do [cadastro por e-mail](cadastro-por-email.md) tem uma exceção restrita aos limites de entrada das três operações planejadas na versão anterior. Em revisões a partir do contrato implementado, essas operações passam pela verificação usual de compatibilidade.
