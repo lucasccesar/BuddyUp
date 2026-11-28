@@ -43,6 +43,11 @@ class RegistrationSecrets {
 		return keyedDigest("source:" + address);
 	}
 
+	String passwordResetToken(UUID challengeId) {
+		byte[] digest = HexFormat.of().parseHex(keyedDigest("password-reset:" + challengeId));
+		return Base64.getUrlEncoder().withoutPadding().encodeToString(digest);
+	}
+
 	boolean matchesCode(UUID challengeId, String code, String digest) {
 		var hex = HexFormat.of();
 		return MessageDigest.isEqual(hex.parseHex(digest), hex.parseHex(codeDigest(challengeId, code)));

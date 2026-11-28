@@ -11,12 +11,17 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import jakarta.servlet.http.HttpServletRequest;
 
-@RestControllerAdvice(assignableTypes = RegistrationController.class)
+@RestControllerAdvice(assignableTypes = { RegistrationController.class, AccountAccessController.class })
 class RegistrationErrorHandler {
 
 	@ExceptionHandler(RegistrationFailure.class)
-	ResponseEntity<ProblemDetail> handleFailure(RegistrationFailure failure) {
+	ResponseEntity<ProblemDetail> handleFailure(RegistrationFailure failure, HttpServletRequest request) {
+		if (failure.status == HttpStatus.SERVICE_UNAVAILABLE
+				&& !request.getServletPath().startsWith("/v1/auth/registration")) {
+			failure = RegistrationFailure.accountAccessUnavailable();
+		}
 		var response = ResponseEntity.status(failure.status).cacheControl(CacheControl.noStore());
 		if (failure.retryAfter > 0) {
 			response.header(HttpHeaders.RETRY_AFTER, Long.toString(failure.retryAfter));
