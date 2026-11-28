@@ -74,3 +74,5 @@ Para adicionar módulos, APIs internas ou migrações, consulte a [arquitetura d
 Para integrar o site ou o app com respostas simuladas, consulte o [contrato OpenAPI e o mock](docs/contrato-api.md).
 
 Para validar o cadastro com uma caixa de e-mail local, consulte [cadastro por e-mail](docs/cadastro-por-email.md).
+
+Para preparar o catálogo no PostgreSQL, siga o [guia da carga inicial do catálogo](docs/carga-inicial-catalogo.md).
